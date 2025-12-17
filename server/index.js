@@ -13,8 +13,11 @@ const app = express();
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(cors({
-  origin: process.env.CLIENT_URL || '*', 
-  credentials: true 
+  origin: [
+    "http://localhost:5173", // Local development
+    process.env.CLIENT_URL   // Deployed Frontend URL (we will set this later)
+  ],
+  credentials: true
 }));
 
 // Routes
