@@ -1,27 +1,38 @@
 const express = require('express');
 const cors = require('cors');
+const connectDB = require('./config/db');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
-const connectDB = require('./config/db');
 
 dotenv.config();
 connectDB();
 
 const app = express();
 
-// Middleware
-app.use(express.json());
-app.use(morgan('dev'));
+const allowedOrigins = [
+  "http://localhost:5173",                      // Local development
+  "https://file-share-beta-five.vercel.app"     // Your Deployment (NO TRAILING SLASH)
+];
+
 app.use(cors({
-  origin: [
-    "http://localhost:5173", // Local development
-    process.env.CLIENT_URL   // Deployed Frontend URL (we will set this later)
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true
 }));
 
+app.use(express.json());
+app.use(morgan('dev'));
+
 // Routes
-app.use('/api/auth', require('./routes/authRoutes')); // Create authRoutes similar to previous response
+app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/files', require('./routes/fileRoutes'));
 
 app.get('/', (req, res) => res.send('NUA API Running'));
